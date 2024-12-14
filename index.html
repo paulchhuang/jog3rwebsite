@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+
+<head>
+    <meta charset="utf-8">
+    <title>JOG3R</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/slider.css">
+    <link href="https://fonts.googleapis.com/css?family=Pacifico" rel="stylesheet">
+</head>
+
+<body>
+    <div id="body">
+        <h1 id="title">JOG3R: On Unifying Video Generation <br> and Camera Pose Estimation</h1>
+        <h3 id="conference">CVPR 2025 Submission 8303</h3>
+        <p style="max-width:1000px; margin:auto; text-align: justify; margin-bottom: 1em">
+            In this HTML document we show video results and 3D camera reconstruction results. Videos should play automatically and in a loop. The webpage was tested with Chrome browser on a 2K resolution display. In case you observe page cutoff, please zoom out in the browser. 
+        </p>
+        <br> 
+        <br> 
+        <h2>Motivation </h2>
+        <p style="font-size:20px;text-align:center">
+            To study the 3D awareness of features in video diffusion transformers, we first propose a unified architecture that does
+               <b>video generation and camera pose estimation jointly</b>. <br>
+               Our novel combined network, <b>JOG3R</b>, stands for JOintGeneration and 3Dcamera Reconstruction. <br>
+               It is able to perform <b>text to video generation (T2V), camera pose estimation from videos (V2C)</b>, and <b>both in one go (T2V+C)</b>. <br>
+               We provide extensitve study and analysis on these tasks in the JOG3R framework and share our insights. <br>
+            In the example below, for each frame pair, we visualize only 10 correspondences to avoid clutter.
+        </p>
+            <table style="width: 90%;margin-left:auto;margin-right:auto;">
+                <tr>
+                    <th>
+                        <div>
+                            generated video from JOG3R
+                        </div>
+                        <video autoplay muted loop height="300">
+                            <source src="assets/motivation/closet.mp4">
+                        </video>
+                    </th>
+                    
+                    <th>
+                        <div>
+                            correspondences estimated during generating videos
+                        </div>
+                        <img src="assets/motivation/closet.gif" height="300">
+                    </th>
+                    <th>
+                        <div>
+                            camera trajectory estimated during generating videos
+                        </div>
+                        
+                        <img src="assets/motivation/closet_trajectory.jpg" height="300">
+                    </th>
+                </tr>
+                <tr>
+                    <th>
+                        <video autoplay muted loop height="300">
+                            <source src="assets/motivation/laundry.mp4">
+                        </video>
+                    </th>
+                    
+                    <th>
+                        <img src="assets/motivation/laundry_slow.gif" height="300">
+                    </th>
+                    <th>
+                        <img src="assets/motivation/laundry_trajectory.jpg" height="300">
+                    </th>
+                </tr>
+            </table>
+        <div id="content">
+            <details>
+                <summary>V2C qualitative results: ours vs. DUSt3R variants </summary>
+                <p style="font-size:20px;">
+                    JOG3R can reconstruct 3D cameras from both real videos and generated videos.<br> 
+                        The estimated cameras are better than pretrained DUSt3R and on-par with finetuned DUSt3R on RealEstate10k.<br> 
+                        <br> 
+                        <br> 
+                        <b>Input: real videos (Figure 4 in the main paper)</b>
+                </p>
+                <table style="width: 100%;margin-left:auto;margin-right:auto;">
+                    <tr>
+                        <th>
+                            <div>
+                                input video
+                            </div>
+                        </th>
+                        <th>
+                            <div>
+                                ground truth camera trajectory
+                            </div>
+                        </th>
+                        <th>
+                            <div>
+                                our camera trajectory
+                            </div>
+                        </th>
+                        <th>
+                            <div>
+                                pretrained DUSt3R's trajectory
+                            </div>
+                        </th>
+                        <th>
+                            <div>
+                                fine-tuned DUSt3R's trajectory
+                            </div>
+                    </tr>
+                    <tr>
+                        <th>
+                            <video autoplay muted loop height="250">
+                                <source src="assets/v2c/110_1025622b7f308760.mp4">
+                            </video>
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c/gt/110_1025622b7f308760_trajectory_gt.jpg">
+                            </div>
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c/ours/110_1025622b7f308760_trajectory_pred.jpg">
+                            </div>
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c/dust3r_pretrained/110_1025622b7f308760_trajectory_pred.jpg">
+                            </div>
+                            
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c/dust3r_re_finetuned/110_1025622b7f308760_trajectory_pred.jpg">
+                            </div>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>
+                            <video autoplay muted loop height="250">
+                                <source src="assets/v2c/30_04c441c7ce273dcc.mp4">
+                            </video>
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c/gt/30_04c441c7ce273dcc_trajectory_gt.jpg">
+                            </div>
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c/ours/30_04c441c7ce273dcc_trajectory_pred.jpg">
+                            </div>
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c/dust3r_pretrained/30_04c441c7ce273dcc_trajectory_pred.jpg">
+                            </div>
+                            
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c/dust3r_re_finetuned/30_04c441c7ce273dcc_trajectory_pred.jpg">
+                            </div>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>
+                            <video autoplay muted loop height="250">
+                                <source src="assets/v2c/450_3fe382b2ae6c9361.mp4">
+                            </video>
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c/gt/450_3fe382b2ae6c9361_trajectory_gt.jpg">
+                            </div>
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c/ours/450_3fe382b2ae6c9361_trajectory_pred.jpg">
+                            </div>
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c/dust3r_pretrained/450_3fe382b2ae6c9361_trajectory_pred.jpg">
+                            </div>
+                            
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c/dust3r_re_finetuned/450_3fe382b2ae6c9361_trajectory_pred.jpg">
+                            </div>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>
+                            <video autoplay muted loop height="250">
+                                <source src="assets/v2c/420_3d2486ac8822da47.mp4">
+                            </video>
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c/gt/420_3d2486ac8822da47_trajectory_gt.jpg">
+                            </div>
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c/ours/420_3d2486ac8822da47_trajectory_pred.jpg">
+                            </div>
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c/dust3r_pretrained/420_3d2486ac8822da47_trajectory_pred.jpg">
+                            </div>
+                            
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c/dust3r_re_finetuned/420_3d2486ac8822da47_trajectory_pred.jpg">
+                            </div>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>
+                            <video autoplay muted loop height="250">
+                                <source src="assets/v2c/490_455964aa4ead1e2f.mp4">
+                            </video>
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c/gt/490_455964aa4ead1e2f_trajectory_gt.jpg">
+                            </div>
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c/ours/490_455964aa4ead1e2f_trajectory_pred.jpg">
+                            </div>
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c/dust3r_pretrained/490_455964aa4ead1e2f_trajectory_pred.jpg">
+                            </div>
+                            
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c/dust3r_re_finetuned/490_455964aa4ead1e2f_trajectory_pred.jpg">
+                            </div>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>
+                            <video autoplay muted loop height="250">
+                                <source src="assets/v2c/510_489254d4b26a04c6.mp4">
+                            </video>
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c/gt/510_489254d4b26a04c6_trajectory_gt.jpg">
+                            </div>
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c/ours/510_489254d4b26a04c6_trajectory_pred.jpg">
+                            </div>
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c/dust3r_pretrained/510_489254d4b26a04c6_trajectory_pred.jpg">
+                            </div>
+                            
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c/dust3r_re_finetuned/510_489254d4b26a04c6_trajectory_pred.jpg">
+                            </div>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>
+                            <video autoplay muted loop height="250">
+                                <source src="assets/v2c/380_371c9182ffd46ce3.mp4">
+                            </video>
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c/gt/380_371c9182ffd46ce3_trajectory_gt.jpg">
+                            </div>
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c/ours/380_371c9182ffd46ce3_trajectory_pred.jpg">
+                            </div>
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c/dust3r_pretrained/380_371c9182ffd46ce3_trajectory_pred.jpg">
+                            </div>
+                            
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c/dust3r_re_finetuned/380_371c9182ffd46ce3_trajectory_pred.jpg">
+                            </div>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>
+                            <video autoplay muted loop height="250">
+                                <source src="assets/v2c/560_51170ef694154b08.mp4">
+                            </video>
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c/gt/560_51170ef694154b08_trajectory_gt.jpg">
+                            </div>
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c/ours/560_51170ef694154b08_trajectory_pred.jpg">
+                            </div>
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c/dust3r_pretrained/560_51170ef694154b08_trajectory_pred.jpg">
+                            </div>
+                            
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c/dust3r_re_finetuned/560_51170ef694154b08_trajectory_pred.jpg">
+                            </div>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>
+                            <video autoplay muted loop height="250">
+                                <source src="assets/v2c/1100_9d0081de499eaa12.mp4">
+                            </video>
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c/gt/1100_9d0081de499eaa12_trajectory_gt.jpg">
+                            </div>
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c/ours/1100_9d0081de499eaa12_trajectory_pred.jpg">
+                            </div>
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c/dust3r_pretrained/1100_9d0081de499eaa12_trajectory_pred.jpg">
+                            </div>
+                            
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c/dust3r_re_finetuned/1100_9d0081de499eaa12_trajectory_pred.jpg">
+                            </div>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>
+                            <video autoplay muted loop height="250">
+                                <source src="assets/v2c/1730_f4b4148fbb2eaf48.mp4">
+                            </video>
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c/gt/1730_f4b4148fbb2eaf48_trajectory_gt.jpg">
+                            </div>
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c/ours/1730_f4b4148fbb2eaf48_trajectory_pred.jpg">
+                            </div>
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c/dust3r_pretrained/1730_f4b4148fbb2eaf48_trajectory_pred.jpg">
+                            </div>
+                            
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c/dust3r_re_finetuned/1730_f4b4148fbb2eaf48_trajectory_pred.jpg">
+                            </div>
+                        </th>
+                    </tr>
+                </table>
+                <p style="font-size:20px;">
+                    <br> 
+                    <b>Input: generated videos (no ground truth avaliable)</b>
+                </p>
+                <table style="width: 100%;margin-left:auto;margin-right:auto;">
+                    <tr>
+                        <th>
+                            <span style="color: #009c3b; font-family: Bradley Hand;">a basketball court in the backyard of a house</span>
+                        </th>
+                        <th>
+                            <div>
+                                our camera trajectory
+                            </div>
+                        </th>
+                        <th>
+                            <div>
+                                pretrained DUSt3R's trajectory
+                            </div>
+                        </th>
+                        <th>
+                            <div>
+                                fine-tuned DUSt3R's trajectory
+                            </div>
+                        </th>
+                        <th>
+                            <div>
+                                from-scratch trained DUSt3R's trajectory
+                            </div>
+                    </tr>
+                    <tr>
+                        <th>
+                            <video autoplay muted loop height="250">
+                                <source src="assets/v2c_generation/sample_0.mp4">
+                            </video>
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c_generation/ours/sample_0.jpg">
+                            </div>
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c_generation/dust3r_pretrained/sample_0.jpg">
+                            </div>
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c_generation/dust3r_re_finetuned/sample_0.jpg">
+                            </div>
+                            
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c_generation/dust3r_fromscratch/sample_0.jpg">
+                            </div>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>
+                            <span style="color: #009c3b; font-family: Bradley Hand;">a modern home with glass walls and patio furniture</span>
+                        </th>
+                        <th>
+                            <div>
+                                our camera trajectory
+                            </div>
+                        </th>
+                        <th>
+                            <div>
+                                pretrained DUSt3R's trajectory
+                            </div>
+                        </th>
+                        <th>
+                            <div>
+                                fine-tuned DUSt3R's trajectory
+                            </div>
+                        </th>
+                        <th>
+                            <div>
+                                from-scratch trained DUSt3R's trajectory
+                            </div>
+                    </tr>
+                    <tr>
+                        <th>
+                            <video autoplay muted loop height="250">
+                                <source src="assets/v2c_generation/sample_1.mp4">
+                            </video>
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c_generation/ours/sample_1.jpg">
+                            </div>
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c_generation/dust3r_pretrained/sample_1.jpg">
+                            </div>
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c_generation/dust3r_re_finetuned/sample_1.jpg">
+                            </div>
+                            
+                        </th>
+                        <th>
+                            <div class="crop">
+                                <img src="assets/v2c_generation/dust3r_fromscratch/sample_1.jpg">
+                            </div>
+                        </th>
+                    </tr>
+                </table>
+            </details>
+            <!-- <details> 
+                <summary>(WIP) V2C ablation: ours vs. ours w/o generation loss </summary>
+                <p style="font-size:20px;">
+                    <b> We also compare with our method without generation loss.<br> 
+                    For each pair of frames, we visualize only 10 correspondences to avoid clutter.</b>
+                </p>
+                <details>
+                    <summary>1de1b73fe4d6aa77 (JOG3R vs. JOG3R w/o generation loss)</summary>
+                    <table style="width: 100%;margin-left:auto;margin-right:auto;">
+                        <tr>
+                            <th>
+                                <img src="assets/v2c/ours/200_1de1b73fe4d6aa77_slow.gif" height="300">
+                                <div>
+                                    ours
+                                </div>
+                            </th>
+                            
+                            <th>
+                                <img src="assets/v2c/ours_nogenloss/200_1de1b73fe4d6aa77_slow.gif" height="300">
+                                <div>
+                                    ours w/o gen loss
+                                </div>
+                            </th>
+                        </tr>
+                        <tr>
+                            <th>
+                                <img src="assets/v2c/ours/200_1de1b73fe4d6aa77_trajectory.jpg" height="350">
+                                <div>
+                                    our camera trajectory
+                                </div>
+                            </th>
+                            <th>
+                                <img src="assets/v2c/ours_nogenloss/200_1de1b73fe4d6aa77_trajectory.jpg" height="350">
+                                <div>
+                                    ours w/o gen loss <br>
+                                    (camera moves as a straight line, no curvry trajectory; <br> 
+                                    the green camera has a sudden jump.)
+                                </div>
+                            </th>
+                        </tr>
+                    </table>
+                </details>
+                <details>
+                    <summary>d48b66d36ec83707 (JOG3R vs. JOG3R w/o generation loss)</summary>
+                    <table style="width: 100%;margin-left:auto;margin-right:auto;">
+                        <tr>
+                            <th>
+                                <img src="assets/v2c/ours/1500_d48b66d36ec83707_slow.gif" height="300">
+                                <div>
+                                    ours
+                                </div>
+                            </th>
+                            <th>
+                                <img src="assets/v2c/ours_nogenloss/1500_d48b66d36ec83707_slow.gif" height="300">
+                                <div>
+                                    ours w/o gen loss
+                                </div>
+                            </th>
+                        </tr>
+                        <tr>
+                            <th>
+                                <img src="assets/v2c/ours/1500_d48b66d36ec83707_trajectory.jpg" height="350">
+                                <div>
+                                    our camera trajectory <br>
+                                    (camera moves only forward)
+                                </div>
+                            </th>
+                            <th>
+                                <img src="assets/v2c/ours_nogenloss/1500_d48b66d36ec83707_trajectory.jpg" height="350">
+                                <div>
+                                    ours w/o gen loss <br>
+                                    (camera jitters back and forth).
+                                </div>
+                            </th>
+                        </tr>
+                    </table>
+                </details>
+            </details> -->
+            <!-- <details> 
+                <summary> (WIP) T2V ablation: JOG3R (ours) vs. ours w/o reconstruction loss</summary>
+                <p style="font-size:20px;">
+                    <b>We compare with a variant trained w/o reconstruction loss and show that reconstruction loss helps generation.</b>
+                </p>
+                <details>
+                    <summary>an empty basement with wood paneling on the walls</summary>
+                    <table style="width: 100%;margin-left:auto;margin-right:auto;">
+                        <tr>
+                            <th>
+                                <video autoplay muted loop height="500">
+                                    <source src="assets/t2v/ours/sample_7.mp4">
+                                </video>
+                                <div>
+                                    ours<br> 
+                                </div>
+                            </th>
+                            <th>
+                                <video autoplay muted loop height="500">
+                                    <source src="assets/t2v/sora_finetuned/sample_7.mp4">
+                                </video>
+                                <div>
+                                    ours w/o reconstruction loss <br> (quality degradation)
+                                </div>
+                            </th>
+                        </tr>
+                    </table>
+                </details>  
+                <details>
+                    <summary>an outdoor swimming pool surrounded by rocks and lounge chairs</summary>
+                    <table style="width: 100%;margin-left:auto;margin-right:auto;">
+                        <tr>
+                            <th>
+                                <video autoplay muted loop height="500">
+                                    <source src="assets/t2v/ours/sample_170.mp4">
+                                </video>
+                                <div>
+                                    ours<br> 
+                                </div>
+                            </th>
+                            <th>
+                                <video autoplay muted loop height="500">
+                                    <source src="assets/t2v/sora_finetuned/sample_170.mp4">
+                                </video>
+                                <div>
+                                    ours w/o reconstruction loss <br> (noticeable artifacts, no camera motion)
+                                </div>
+                            </th>
+                        </tr>
+                    </table>
+                </details>  
+                <details>
+                    <summary>a dining room table with chairs and a vase of flowers</summary>
+                    <table style="width: 100%;margin-left:auto;margin-right:auto;">
+                        <tr>
+                            <th>
+                                <video autoplay muted loop height="500">
+                                    <source src="assets/t2v/ours/sample_55.mp4">
+                                </video>
+                                <div>
+                                    ours<br> 
+                                </div>
+                            </th>
+                            <th>
+                                <video autoplay muted loop height="500">
+                                    <source src="assets/t2v/sora_finetuned/sample_55.mp4">
+                                </video>
+                                <div>
+                                    ours w/o reconstruction loss <br> (left chair has artifacts)
+                                </div>
+                            </th>
+                        </tr>
+                    </table>
+                </details>  
+                <details>
+                    <summary>a living room with a couch, coffee table, and entertainment center</summary>
+                    <table style="width: 100%;margin-left:auto;margin-right:auto;">
+                        <tr>
+                            <th>
+                                <video autoplay muted loop height="500">
+                                    <source src="assets/t2v/ours/sample_71.mp4">
+                                </video>
+                                <div>
+                                    ours <br> 
+                                </div>
+                            </th>
+                            <th>
+                                <video autoplay muted loop height="500">
+                                    <source src="assets/t2v/sora_finetuned/sample_71.mp4">
+                                </video>
+                                <div>
+                                    ours w/o reconstruction loss <br> (deforming artifacts appearing on the left at the end)
+                                </div>
+                            </th>
+                        </tr>
+                    </table>
+                </details>  
+                <details>
+                    <summary>a laundry room with a washer and dryer in it</summary>
+                    <table style="width: 100%;margin-left:auto;margin-right:auto;">
+                        <tr>
+                            <th>
+                                <video autoplay muted loop height="500">
+                                    <source src="assets/t2v/ours/sample_9.mp4">
+                                </video>
+                                <div>
+                                    ours<br> 
+                                </div>
+                            </th>
+                            <th>
+                                <video autoplay muted loop height="500">
+                                    <source src="assets/t2v/sora_finetuned/sample_9.mp4">
+                                </video>
+                                <div>
+                                    ours w/o reconstruction loss <br> (implausible wash machine configuration)
+                                </div>
+                            </th>
+                        </tr>
+                    </table>
+                </details>  
+            </details> -->
+            <details> 
+                <summary>T2V & T2V+C qualitative results</summary>
+                <p style="font-size:20px;">
+                    All videos in this section are generated from JOG3R (Figure 6 in the main paper). <br> 
+                    We additionally generate cammera paths (T2V+C) and confirm they are nearly identical<br> with the paths estimated by running V2C on the generated videos (T2V->V2C) (Figure 5 in the main paper).<br> 
+                    For each pair of frames, we visualize only 10 correspondences to avoid clutter.
+                </p>
+                <table style="width: 100%;margin-left:auto;margin-right:auto;">
+                    <tr>
+                        <th>
+                            <span style="color: #009c3b; font-family: Bradley Hand;">a backyard with steps leading up to a blue house</span><br>
+                            <video autoplay muted loop height="350">
+                                <source src="assets/t2vc/sample_0.mp4">
+                            </video>
+                        </th>
+                        <th>
+                            <div>
+                                correspondences from T2V+C 
+                            </div>
+                            <img src="assets/t2vc/00_slow.gif" height="350">
+                        </th>
+                        
+                        <th>
+                            
+                            <div>
+                                correspondences from T2V->V2C
+                            </div>
+                            <img src="assets/t2vv2c/0_a_living_room_with_leather_chairs_and_guitars_slow.gif" height="350">
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>
+                            
+                        </th>
+                        <th>
+                            <div>
+                                camera poses from T2V+C
+                            </div>
+                            <img src="assets/t2vc/0_a_backyard_with_steps_leading_up_to_a_blue_house_trajectory.jpg" height="350">
+                        </th>
+                        <th>
+                            <div>
+                                camera poses from T2V->V2C
+                            </div>
+                            <img src="assets/t2vv2c/0_a_living_room_with_leather_chairs_and_guitars_trajectory.jpg" height="350">
+                            
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>
+                            <span style="color: #009c3b; font-family: Bradley Hand;">a basketball court in the backyard of a house</span><br>
+                            <video autoplay muted loop height="350">
+                                <source src="assets/t2vc/sample_1.mp4">
+                            </video>
+                        </th>
+                        <th>
+                            <div>
+                                correspondences from T2V+C 
+                            </div>
+                            <img src="assets/t2vc/01_slow.gif" height="350">
+                        </th>
+                        
+                        <th>
+                            
+                            <div>
+                                correspondences from T2V->V2C
+                            </div>
+                            <img src="assets/t2vv2c/0_a_basketball_court_in_the_backyard_of_a_house_slow.gif" height="350">
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>
+                            
+                        </th>
+                        <th>
+                            <div>
+                                camera poses from T2V+C
+                            </div>
+                            <img src="assets/t2vc/01_trajectory.jpg" height="350">
+                        </th>
+                        <th>
+                            <div>
+                                camera poses from T2V->V2C
+                            </div>
+                            <img src="assets/t2vv2c/0_a_basketball_court_in_the_backyard_of_a_house_trajectory.jpg" height="350">
+                            
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>
+                            <span style="color: #009c3b; font-family: Bradley Hand;">a patio with chairs and tables in front of a house</span><br>
+                            <video autoplay muted loop height="350">
+                                <source src="assets/t2vc/sample_2.mp4">
+                            </video>
+                        </th>
+                        <th>
+                            <div>
+                                correspondences from T2V+C 
+                            </div>
+                            <img src="assets/t2vc/02_slow.gif" height="350">
+                        </th>
+                        
+                        <th>
+                            
+                            <div>
+                                correspondences from T2V->V2C
+                            </div>
+                            <img src="assets/t2vv2c/0_a_patio_with_chairs_and_tables_in_front_of_a_house_slow.gif" height="350">
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>
+                            
+                        </th>
+                        <th>
+                            <div>
+                                camera poses from T2V+C
+                            </div>
+                            <img src="assets/t2vc/02_trajectory.jpg" height="350">
+                        </th>
+                        <th>
+                            <div>
+                                camera poses from T2V->V2C
+                            </div>
+                            <img src="assets/t2vv2c/0_a_patio_with_chairs_and_tables_in_front_of_a_house_trajectory.jpg" height="350">
+                            
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>
+                            <span style="color: #009c3b; font-family: Bradley Hand;">a view of a kitchen and living room in a new home</span><br>
+                            <video autoplay muted loop height="350">
+                                <source src="assets/t2vc/sample_3.mp4">
+                            </video>
+                        </th>
+                        <th>
+                            <div>
+                                correspondences from T2V+C 
+                            </div>
+                            <img src="assets/t2vc/03_slow.gif" height="350">
+                        </th>
+                        
+                        <th>
+                            
+                            <div>
+                                correspondences from T2V->V2C
+                            </div>
+                            <img src="assets/t2vv2c/0_a_view_of_a_kitchen_and_living_room_in_a_new_home_slow.gif" height="350">
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>
+                            
+                        </th>
+                        <th>
+                            <div>
+                                camera poses from T2V+C
+                            </div>
+                            <img src="assets/t2vc/03_trajectory.jpg" height="350">
+                        </th>
+                        <th>
+                            <div>
+                                camera poses from T2V->V2C
+                            </div>
+                            <img src="assets/t2vv2c/0_a_view_of_a_kitchen_and_living_room_in_a_new_home_trajectory.jpg" height="350">
+                            
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>
+                            <span style="color: #009c3b; font-family: Bradley Hand;">a dining room table with chairs and a view of the water</span><br>
+                            <video autoplay muted loop height="350">
+                                <source src="assets/t2vc/sample_4.mp4">
+                            </video>
+                        </th>
+                        <th>
+                            <div>
+                                correspondences from T2V+C 
+                            </div>
+                            <img src="assets/t2vc/04_slow.gif" height="350">
+                        </th>
+                        
+                        <th>
+                            
+                            <div>
+                                correspondences from T2V->V2C
+                            </div>
+                            <img src="assets/t2vv2c/0_a_dining_room_table_with_chairs_and_a_view_of_the_water_slow.gif" height="350">
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>
+                            
+                        </th>
+                        <th>
+                            <div>
+                                camera poses from T2V+C
+                            </div>
+                            <img src="assets/t2vc/04_trajectory.jpg" height="350">
+                        </th>
+                        <th>
+                            <div>
+                                camera poses from T2V->V2C
+                            </div>
+                            <img src="assets/t2vv2c/0_a_dining_room_table_with_chairs_and_a_view_of_the_water_trajectory.jpg" height="350">
+                            
+                        </th>
+                    </tr>
+                </table>
+            </details>
+        </div>
+    </div>
+    <script type="text/javascript" src="script.js"></script>
+    <!-- <script type="text/javascript" src="cocoen.js"></script> -->
+    <!-- <script>
+      Cocoen.parse(document.body);
+    </script> -->
+</body>
