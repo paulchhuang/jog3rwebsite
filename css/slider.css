@@ -79,14 +79,6 @@
     width: calc(50% - 1rem);
 }
 
-.crop {
-    width: 366px;
-    height: 300px;
-    overflow: hidden;
-}
-
-.crop img {
-    width: 427px;
-    height: 350px;
-    margin: -40px 0 0 0;
+.three-videos video {
+    width: calc(33.3% - 1rem);
 }
